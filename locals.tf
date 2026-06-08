@@ -26,12 +26,12 @@ locals {
   route_tables = {
     for k, v in var.route_tables : k => merge(v, {
       route_rules = [
-        for rr in v.route_rules : {
-          description       = rr.description
-          destination       = try(local.services[rr.destination].cidr_block, rr.destination)
-          destination_type  = rr.destination_type
-          network_entity_id = local.network_entity_ids[rr.network_entity_name]
-        }
+	for rr in v.route_rules : {
+	  description       = rr.description
+	  destination       = try(local.services[rr.destination].cidr_block, rr.destination)
+	  destination_type  = rr.destination_type
+	  network_entity_id = local.network_entity_ids[rr.network_entity_name]
+	}
       ]
     })
   }
@@ -45,7 +45,7 @@ locals {
       stateless                   = v.stateless
       source                      = v.source_type == "NETWORK_SECURITY_GROUP" ? module.nsgs[v.source].id : v.source
       source_type                 = v.source_type
-      destination                 = v.destination_type == "NETWORK_SECURITY_GROUP" ? module.nsgs[v.destination].id : v.destination
+      destination                 = v.destination_type == "NETWORK_SECURITY_GROUP" ? module.nsgs[v.destination].id : try(local.services[v.destination].cidr_block, v.destination)
       destination_type            = v.destination_type
       tcp_options                 = v.tcp_options
       udp_options                 = v.udp_options
@@ -57,11 +57,11 @@ locals {
     for k, v in var.instances : k => merge(v, {
       availability_domain = local.availability_domains[v.availability_domain]
       create_vnic_details = merge(v.create_vnic_details, {
-        subnet_id = try(module.subnets[v.create_vnic_details.subnet_name].id, v.create_vnic_details.subnet_id)
-        nsg_ids   = [for nsg_name in v.create_vnic_details.nsg_names : module.nsgs[nsg_name].id]
+	subnet_id = try(module.subnets[v.create_vnic_details.subnet_name].id, v.create_vnic_details.subnet_id)
+	nsg_ids   = [for nsg_name in v.create_vnic_details.nsg_names : module.nsgs[nsg_name].id]
       })
       source_details = merge(v.source_details, {
-        source_id = var.source_ids[v.source_details.source_name]
+	source_id = var.source_ids[v.source_details.source_name]
       })
       ssh_public_keys = join("\n", v.ssh_public_keys)
     })
@@ -70,10 +70,11 @@ locals {
   clusters = {
     for k, v in var.clusters : k => merge(v, {
       endpoint_config = merge(v.endpoint_config, {
-        subnet_id = module.subnets[v.endpoint_config.subnet_name].id
+	subnet_id = module.subnets[v.endpoint_config.subnet_name].id
+	nsg_ids   = [for name in try(v.endpoint_config.nsg_names, []) : module.nsgs[name].id]
       })
       options = v.options != null ? merge(v.options, {
-        service_lb_subnet_ids = [for name in try(v.options.service_lb_subnet_names, []) : module.subnets[name].id]
+	service_lb_subnet_ids = [for name in try(v.options.service_lb_subnet_names, []) : module.subnets[name].id]
       }) : null
     })
   }
@@ -83,6 +84,9 @@ locals {
       image_id       = var.oke_worker_node_image_ids[v.node_source_details.image_name]
       subnet_ids     = { for name, subnet in module.subnets : name => subnet.id }
       pod_subnet_ids = { for name, subnet in module.subnets : name => subnet.id }
+      node_config_details = merge(v.node_config_details, {
+	nsg_ids = [for name in try(v.node_config_details.nsg_names, []) : module.nsgs[name].id]
+      })
     })
   }
 }

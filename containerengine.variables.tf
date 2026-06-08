@@ -8,6 +8,7 @@ variable "clusters" {
     endpoint_config = object({
       subnet_name          = string
       is_public_ip_enabled = bool
+      nsg_names            = optional(list(string), [])
     })
     options = optional(object({
       service_lb_subnet_names = optional(list(string))
@@ -30,14 +31,15 @@ variable "node_pools" {
     ssh_public_key     = string
     node_config_details = object({
       placement_configs = list(object({
-        availability_domain = number
-        subnet_name         = string
+	availability_domain = number
+	subnet_name         = string
       }))
-      size = number
+      size      = number
+      nsg_names = optional(list(string), [])
       node_pool_pod_network_option_details = object({
-        cni_type          = string
-        max_pods_per_node = optional(number)
-        pod_subnet_names  = optional(list(string))
+	cni_type          = string
+	max_pods_per_node = optional(number)
+	pod_subnet_names  = optional(list(string))
       })
     })
     node_source_details = object({

@@ -54,7 +54,7 @@ module "subnets" {
   prohibit_internet_ingress  = each.value.prohibit_internet_ingress
   prohibit_public_ip_on_vnic = each.value.prohibit_public_ip_on_vnic
   route_table_id             = each.value.route_table_name == null ? null : module.route_tables[each.value.route_table_name].id
-  security_list_ids          = [module.vcns[each.value.vcn_name].managed_default_security_list_id]
+  security_list_ids          = [module.vcns[each.value.vcn_name].default_security_list_id]
 }
 
 module "nsgs" {

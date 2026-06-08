@@ -81,7 +81,7 @@ route_tables = {
 	destination         = "services"
 	destination_type    = "SERVICE_CIDR_BLOCK"
 	network_entity_name = "sg_sg"
-      }
+      },
       {
 	description         = "traffic to the internet"
 	destination         = "0.0.0.0/0"
@@ -339,7 +339,7 @@ nsg_rules = {
 }
 
 source_ids = {
-  "Oracle-Linux-10.1-2026.04.30-3" = "ocid1.image.oc1.."
+  "Oracle-Linux-10.1-2026.04.30-3" = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaae5rgpcr5t7hwknaeatew32bw5p4ytmzeg2w7mbjot2vhbzw7bwia"
 }
 
 instances = {
@@ -361,7 +361,7 @@ instances = {
       source_name = "Oracle-Linux-10.1-2026.04.30-3"
     }
     ssh_public_keys = [
-      "ssh-rsa ..."
+      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC+qUPnq3ELkvEXclIv27YnMsVFdEwVC9XmjpbWYcvIBq3sLF+UBat05PYNLUmvHJS5jA6bb5Wn323YLx2+CyUBD+7UfACNo/aCaliqtskGeDKfzOiFDP2kvfMNIDCOS4hKJpgqE8irOgcTcrL94GU7BjxsyC+JCN/qgWTcvKQNb3duiDz4lzvQI7Cb0ZeFfn6bUAYVe8D0Y9HGoWnmp/7Ku4RLNCQQSjBMmtiTL4q7q9hTG3VEmldOMbncPiEp3bBiepj0sg5dxX5jhYn7ftwNcSkkifaz68yNd13c85dNXq3Nf/8Bw0Jhx28uor3xz7nYAoXdkK7Jnzwjl/lwP0xTOhrBf1iZ8E4FZ1612tIKt2xoWLOn+0fveaGnu+LqNLidWOZ71WUH18Vg2n9UnWm2HQQyA+i9LrIXN/ZXo1osVno4cxVU4zFkaCQDYQ+Cl8BmT0NMvmvlPxsYdzRCreKQB3b1nPZUM6ReTukyrN64DP5eB3J+LDSplcFLgLE+7XU= bd"
     ]
     cloud_init = [
       {
