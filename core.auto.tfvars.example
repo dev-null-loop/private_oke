@@ -81,7 +81,7 @@ route_tables = {
 	destination         = "services"
 	destination_type    = "SERVICE_CIDR_BLOCK"
 	network_entity_name = "sg_sg"
-      }
+      },
       {
 	description         = "traffic to the internet"
 	destination         = "0.0.0.0/0"

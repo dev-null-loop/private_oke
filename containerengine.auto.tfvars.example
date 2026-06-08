@@ -46,11 +46,11 @@ node_pools = {
 	{
 	  availability_domain = 1
 	  subnet_name         = "nodes"
-	}
+	},
 	{
 	  availability_domain = 2
 	  subnet_name         = "nodes"
-	}
+	},
 	{
 	  availability_domain = 3
 	  subnet_name         = "nodes"
