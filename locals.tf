@@ -81,11 +81,30 @@ locals {
 
   node_pools = {
     for k, v in var.node_pools : k => merge(v, {
-      image_id       = var.oke_worker_node_image_ids[v.node_source_details.image_name]
-      subnet_ids     = { for name, subnet in module.subnets : name => subnet.id }
-      pod_subnet_ids = { for name, subnet in module.subnets : name => subnet.id }
+      image_id = var.oke_worker_node_image_ids[v.node_source_details.image_name]
+      secondary_vnics = [
+        for sv in try(v.secondary_vnics, []) : merge(sv, {
+          create_vnic_details = merge(sv.create_vnic_details, {
+            subnet_id = module.subnets[sv.create_vnic_details.subnet_name].id
+            nsg_ids   = [for name in try(sv.create_vnic_details.nsg_names, []) : module.nsgs[name].id]
+          })
+        })
+      ]
       node_config_details = merge(v.node_config_details, {
-	nsg_ids = [for name in try(v.node_config_details.nsg_names, []) : module.nsgs[name].id]
+        placement_configs = [
+          for pc in v.node_config_details.placement_configs : {
+            availability_domain     = local.availability_domains[pc.availability_domain]
+            fault_domains           = try([for fd in pc.fault_domains : "FAULT-DOMAIN-${fd}"], null)
+            subnet_id               = module.subnets[pc.subnet_name].id
+            capacity_reservation_id = pc.capacity_reservation_id
+          }
+        ]
+        node_pool_pod_network_option_details = v.node_config_details.node_pool_pod_network_option_details == null ? null : merge(v.node_config_details.node_pool_pod_network_option_details, {
+          pod_subnet_ids = try(v.node_config_details.node_pool_pod_network_option_details.pod_subnet_names, null) == null ? null : [
+            for name in v.node_config_details.node_pool_pod_network_option_details.pod_subnet_names : module.subnets[name].id
+          ]
+        })
+        nsg_ids = [for name in try(v.node_config_details.nsg_names, []) : module.nsgs[name].id]
       })
     })
   }

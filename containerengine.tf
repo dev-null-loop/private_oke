@@ -26,7 +26,7 @@ module "node_pools" {
   node_eviction_node_pool_settings = each.value.node_eviction_node_pool_settings
   node_shape                       = each.value.node_shape
   node_shape_config                = each.value.node_shape_config
+  freeform_tags                    = each.value.freeform_tags
+  secondary_vnics                  = each.value.secondary_vnics
   ssh_public_key                   = each.value.ssh_public_key
-  subnet_ids                       = each.value.subnet_ids
-  pod_subnet_ids                   = each.value.pod_subnet_ids
 }
