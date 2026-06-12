@@ -1,3 +1,23 @@
+data "cloudinit_config" "instances" {
+  for_each = {
+    for k, v in var.instances : k => v
+    if length(v.cloud_init) > 0
+  }
+
+  gzip          = false
+  base64_encode = false
+
+  dynamic "part" {
+    for_each = each.value.cloud_init
+    iterator = p
+    content {
+      content_type = p.value.content_type
+      content      = p.value.content != null ? p.value.content : file(p.value.filename)
+      filename     = p.value.filename != null ? basename(p.value.filename) : null
+    }
+  }
+}
+
 module "vcns" {
   source                 = "git@github.com:dev-null-loop/oci_core//vcn"
   for_each               = var.vcns
@@ -90,9 +110,8 @@ module "instances" {
   enable_vnic_lookup_outputs = false
   create_vnic_details        = each.value.create_vnic_details
   display_name               = each.value.display_name
-  ssh_public_keys            = each.value.ssh_public_keys
+  metadata                   = each.value.metadata
   shape                      = each.value.shape
   shape_config               = each.value.shape_config
   source_details             = each.value.source_details
-  cloud_init                 = each.value.cloud_init
 }

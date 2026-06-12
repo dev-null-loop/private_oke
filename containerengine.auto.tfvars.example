@@ -1,5 +1,5 @@
 oke_worker_node_image_ids = {
-  "Oracle-Linux-8.10-2026.02.28-0-OKE-1.33.10-1402" = "ocid1.image.oc1.."
+  "Oracle-Linux-8.10-2026.04.30-3-OKE-1.36.0-1462" = "ocid1.image.oc1.."
 }
 
 clusters = {
@@ -7,7 +7,7 @@ clusters = {
     compartment_name   = "dev"
     name               = "cluster"
     vcn_name           = "vcn"
-    kubernetes_version = "v1.33.10"
+    kubernetes_version = "v1.36.0"
     cni_type           = "OCI_VCN_IP_NATIVE"
     endpoint_config = {
       subnet_name          = "api_endpoint"
@@ -24,10 +24,13 @@ node_pools = {
   n = {
     cluster_name       = "c"
     compartment_name   = "dev"
-    kubernetes_version = "v1.33.10"
+    kubernetes_version = "v1.36.0"
     name               = "pool"
+    freeform_tags = {
+      oke-cluster-autoscaler = "true"
+    }
     node_source_details = {
-      image_name = "Oracle-Linux-8.10-2026.02.28-0-OKE-1.33.10-1402"
+      image_name = "Oracle-Linux-8.10-2026.04.30-3-OKE-1.36.0-1462"
     }
     cloud_init = [
       {
@@ -62,11 +65,112 @@ node_pools = {
       eviction_grace_duration              = "PT1M"
       is_force_delete_after_grace_duration = true
     }
+    secondary_vnics = [
+      {
+	display_name = "frontend"
+	create_vnic_details = {
+	  application_resources = ["frontend"]
+	  assign_public_ip      = false
+	  display_name          = "frontend"
+	  ip_count              = 16
+	  nsg_names             = ["nodes"]
+	  subnet_name           = "nodes"
+	}
+      }
+    ]
     node_shape = "VM.Standard.E3.Flex"
     node_shape_config = {
       ocpus         = 4
       memory_in_gbs = 16
     }
     ssh_public_key = "ssh-rsa ..."
+  }
+}
+
+addons = {
+  cert_manager = {
+    cluster_name  = "c"
+    addon_name    = "CertManager"
+    addon_version = "v1.20.2"
+    configurations = {
+      numOfReplicas = "1"
+    }
+  }
+  cluster_autoscaler = {
+    cluster_name     = "c"
+    addon_name       = "ClusterAutoscaler"
+    addon_version    = "v1.34.3"
+    compartment_name = "dev"
+    node_pool_name   = "n"
+    min_nodes        = 1
+    max_nodes        = 3
+    node_pool_tags = {
+      oke-cluster-autoscaler = "true"
+    }
+    configurations = {
+      numOfReplicas                    = "1"
+      authType                         = "instance"
+      scaleDownDelayAfterAdd           = "10m"
+      scaleDownDelayAfterDelete        = "10s"
+      scaleDownDelayAfterFailure       = "3m"
+      scaleDownUnneededTime            = "10m"
+      scaleDownUnreadyTime             = "20m"
+      scaleDownUtilizationThreshold    = "0.5"
+      scaleDownNonEmptyCandidatesCount = "30"
+      scaleDownCandidatesPoolRatio     = "0.1"
+      scaleDownCandidatesPoolMinCount  = "50"
+      unremovableNodeRecheckTimeout    = "5m"
+    }
+  }
+  csi_driver_smb = {
+    cluster_name  = "c"
+    addon_name    = "CsiDriverSmb"
+    addon_version = "v1.19.1"
+  }
+  istio = {
+    cluster_name  = "c"
+    addon_name    = "Istio"
+    addon_version = "v1.28.5"
+    configurations = {
+      numOfReplicas        = "1"
+      profile              = "oke-default"
+      enableIngressGateway = "false"
+      customizeConfigMap   = "false"
+    }
+  }
+  kubernetes_dashboard = {
+    cluster_name  = "c"
+    addon_name    = "KubernetesDashboard"
+    addon_version = "v2.7.0-multiarch-1.25-2"
+    configurations = {
+      numOfReplicas = "1"
+    }
+  }
+  native_ingress_controller = {
+    cluster_name              = "c"
+    addon_name                = "NativeIngressController"
+    addon_version             = "v1.4.4"
+    compartment_name          = "dev"
+    load_balancer_subnet_name = "svcs_lb"
+    configurations = {
+      numOfReplicas = "1"
+      authType      = "instance"
+    }
+  }
+  oracle_database_operator = {
+    cluster_name  = "c"
+    addon_name    = "OracleDatabaseOperator"
+    addon_version = "v2.1.0"
+    configurations = {
+      numOfReplicas = "1"
+    }
+  }
+  weblogic_kubernetes_operator = {
+    cluster_name  = "c"
+    addon_name    = "WeblogicKubernetesOperator"
+    addon_version = "v4.3.0"
+    configurations = {
+      numOfReplicas = "1"
+    }
   }
 }

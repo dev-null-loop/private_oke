@@ -26,12 +26,12 @@ locals {
   route_tables = {
     for k, v in var.route_tables : k => merge(v, {
       route_rules = [
-	for rr in v.route_rules : {
-	  description       = rr.description
-	  destination       = try(local.services[rr.destination].cidr_block, rr.destination)
-	  destination_type  = rr.destination_type
-	  network_entity_id = local.network_entity_ids[rr.network_entity_name]
-	}
+        for rr in v.route_rules : {
+          description       = rr.description
+          destination       = try(local.services[rr.destination].cidr_block, rr.destination)
+          destination_type  = rr.destination_type
+          network_entity_id = local.network_entity_ids[rr.network_entity_name]
+        }
       ]
     })
   }
@@ -57,24 +57,31 @@ locals {
     for k, v in var.instances : k => merge(v, {
       availability_domain = local.availability_domains[v.availability_domain]
       create_vnic_details = merge(v.create_vnic_details, {
-	subnet_id = try(module.subnets[v.create_vnic_details.subnet_name].id, v.create_vnic_details.subnet_id)
-	nsg_ids   = [for nsg_name in v.create_vnic_details.nsg_names : module.nsgs[nsg_name].id]
+        subnet_id = try(module.subnets[v.create_vnic_details.subnet_name].id, v.create_vnic_details.subnet_id)
+        nsg_ids   = [for nsg_name in v.create_vnic_details.nsg_names : module.nsgs[nsg_name].id]
       })
+      metadata = merge(
+        {
+          ssh_authorized_keys = join("\n", v.ssh_public_keys)
+        },
+        length(v.cloud_init) > 0 ? {
+          user_data = base64encode(data.cloudinit_config.instances[k].rendered)
+        } : {}
+      )
       source_details = merge(v.source_details, {
-	source_id = var.source_ids[v.source_details.source_name]
+        source_id = var.source_ids[v.source_details.source_name]
       })
-      ssh_public_keys = join("\n", v.ssh_public_keys)
     })
   }
 
   clusters = {
     for k, v in var.clusters : k => merge(v, {
       endpoint_config = merge(v.endpoint_config, {
-	subnet_id = module.subnets[v.endpoint_config.subnet_name].id
-	nsg_ids   = [for name in try(v.endpoint_config.nsg_names, []) : module.nsgs[name].id]
+        subnet_id = module.subnets[v.endpoint_config.subnet_name].id
+        nsg_ids   = [for name in try(v.endpoint_config.nsg_names, []) : module.nsgs[name].id]
       })
       options = v.options != null ? merge(v.options, {
-	service_lb_subnet_ids = [for name in try(v.options.service_lb_subnet_names, []) : module.subnets[name].id]
+        service_lb_subnet_ids = [for name in try(v.options.service_lb_subnet_names, []) : module.subnets[name].id]
       }) : null
     })
   }
